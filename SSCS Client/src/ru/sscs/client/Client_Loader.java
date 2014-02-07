@@ -4,14 +4,12 @@
  */
 package ru.sscs.client;
 
-import ru.sscs.client.utils.Language;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import javax.swing.JOptionPane;
@@ -26,7 +24,7 @@ import ru.sscs.client.listeners.ServerListener;
  */
 public class Client_Loader implements Runnable {
 
-    public static final String version = "1.5A";
+    public static final String version = "1.6A";
     public static int port = 20222;
     public static String host = "localhost";
     public static Socket socket = null;
@@ -34,7 +32,7 @@ public class Client_Loader implements Runnable {
     public static PrintStream out = null;
     public static BufferedReader reader = null;
     public static boolean closed = false;
-    public static Language lang;
+    public static String source;
     public static String problem, pathToFile = "", contestId = null, name = null;
     public static Graphics graphics;
     public static boolean debug = false;

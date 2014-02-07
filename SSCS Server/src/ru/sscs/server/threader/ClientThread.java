@@ -33,7 +33,7 @@ public class ClientThread extends Thread {
     public Socket socket = null;
     public int id = 0;
     public String contestId = null;
-    private String problem, format;
+    private String problem, source;
     
     public ClientThread(Socket socket, int id) {
         this.socket = socket;
@@ -54,7 +54,7 @@ public class ClientThread extends Thread {
                     String[] args = line.split(":");
                     if(args.length != 3) throw new Exception("Unknown file arguments!");
                     problem = args[1];
-                    format = args[2];
+                    source = args[2];
                     addToQueue(id);
                 }else if(line.equals("Sent")) {
                     if(readFile() && Server_Loader.busy != -1) new Checker(Server_Loader.problem, Server_Loader.lang);
@@ -104,12 +104,12 @@ public class ClientThread extends Thread {
             BufferedOutputStream bos = null;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
-                Language language = Language.getLanguageByFormat(format);
+                String language = Language.getLanguageBySource(source);
                 File output = new File(Server_Loader.fileOutput + problem + Language.getSourceByLanguage(language));
                 Server_Loader.lang = language;
                 Server_Loader.problem = problem;
                 Server_Loader.currentProblem = Server_Loader.problemsIds.get(problem);
-                if(language.equals(Language.Unknown)) {
+                if(!Language.languages.contains(language)) {
                     AnswersSender.send(Answer.UnknownLanguage);
                     return false;
                 }

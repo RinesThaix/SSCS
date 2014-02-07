@@ -16,7 +16,6 @@ import javax.swing.JFileChooser;
 import ru.sscs.client.utils.BaseUtils;
 import ru.sscs.client.Client_Loader;
 import ru.sscs.client.Graphics;
-import ru.sscs.client.utils.Language;
 
 /**
  *
@@ -48,10 +47,10 @@ public class ActionListeners implements ActionListener, FocusListener, KeyListen
                 String problem = Client_Loader.problem, src = "";
                 for(int i = name.length() - 1; i >= 0; i--) if(name.charAt(i) == '.') break;
                 else sb.append(name.charAt(i));
-                src = sb.reverse().toString();
-                Client_Loader.lang = Language.getLanguageBySource(src);
+                src = "." + sb.reverse().toString();
+                Client_Loader.source = src;
                 Client_Loader.pathToFile = g.selected.getPath();
-                BaseUtils.sendString("Ready_to_send:" + problem + ":" + Language.getFormatByLanguage(Client_Loader.lang));
+                BaseUtils.sendString("Ready_to_send:" + problem + ":" + Client_Loader.source);
                 g.send.setEnabled(false);
             }else BaseUtils.logln("!!");
         }else if(e.getSource() == g.auth_button) auth();

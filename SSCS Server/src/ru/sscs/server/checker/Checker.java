@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
@@ -32,9 +33,9 @@ public class Checker {
     public long memoryCrash = 0;
     public Scanner r1, r2;
     public String problem;
-    public Language lang;
+    public String lang;
     
-    public Checker(String problem, Language lang) {
+    public Checker(String problem, String lang) {
         int i = 1;
         try {
             this.problem = problem;
@@ -47,14 +48,14 @@ public class Checker {
             Config problem_config = new Config(folder, "info");
             double limit = Double.parseDouble(problem_config.getString("TimeLimit", "2"));
             double javalimit = Double.parseDouble(problem_config.getString("JavaTimeLimit", "3"));
-            if(lang == Language.Java) limit = javalimit;
+            if(lang.equals("java")) limit = javalimit;
             long memory = Long.parseLong(problem_config.getString("MemoryLimit", "64")) * 1024 * 1024;
             deleteDirectory();
             File copyed = new File(check, problem + Language.getSourceByLanguage(lang));
             if(copyed.exists()) copyed.delete();
             File current = new File(check.getParent(), "temporary/" + problem + Language.getSourceByLanguage(lang));
             copyFile(current, copyed);
-            new Compiler();
+            new Compiler(this);
             PrintWriter w;
             if(folder.exists()) {
                 File tests = new File(folder, "tests");
@@ -72,25 +73,15 @@ public class Checker {
                     while(r1.hasNextLine()) w.write(r1.nextLine());
                     w.close();
                     long sTime = 0, eTime = 0, sMemory = 0, eMemory = 0;
+                    String exec = "N/a";
                     try {
-                        File run;
-                        String exec;
-                        switch(lang) {
-                            case Java:
-                                run = new File(check, problem + ".class");
-                                exec = Server_Loader.config.getString("java_launcher") + " " + problem;
-                                break;
-                            case Cplus:
-                                run = new File(check, "a.exe");
-                                exec = "check/a";
-                                break;
-                            default:
-                                run = new File(check, problem + ".exe");
-                                exec = "check/" + problem;
-                                break;
-                        }
+                        exec = Language.getExecutionScriptByLanguage(lang);
+                        String filename = Language.getRunfileByLanguage(lang).replace("$name$", problem);
+                        File run = new File(check, filename);
+                        if(!lang.equals("java")) exec += " check/" + filename;
+                        else exec += " " + problem;
                         if(!run.exists()) {
-                            AnswersSender.send(Answer.CompilationError, i);
+                            AnswersSender.send(Answer.CompilationError);
                             deleteDirectory();
                             return;
                         }
@@ -101,6 +92,8 @@ public class Checker {
                         ProcessChecker checker = new ProcessChecker(this, process, limit, sMemory, memory);
                         process.waitFor();
                         if(process.getErrorStream().read() != -1) {
+                            System.err.println("Execution script: " + exec);
+                            printError(process.getErrorStream(), false);
                             AnswersSender.send(Answer.RuntimeError, i);
                             deleteDirectory();
                             return;
@@ -108,7 +101,9 @@ public class Checker {
                         eTime = System.currentTimeMillis();
                         checker.doit = false;
                     }catch(Exception ex) {
-                        AnswersSender.send(Answer.RuntimeError, i);
+                        System.err.println("Execution script: " + exec);
+                        ex.printStackTrace();
+                        AnswersSender.send(Answer.JuryError, i);
                         deleteDirectory();
                         return;
                     }
@@ -191,20 +186,23 @@ public class Checker {
     public void deleteDirectory() {
         if(r1 != null) r1.close();
         if(r1 != null) r1.close();
-        File in = new File(check, problem + ".in");
-        File out = new File(check, problem + ".out");
-        File src = new File(check, problem + Language.getSourceByLanguage(lang));
-        File run;
-        if(lang.equals(Language.Java)) run = new File(check, problem + ".class");
-        else if(lang.equals(Language.Pascal) || lang.equals(Language.Delphi)) {
-            run = new File(check, problem + ".exe");
-            File o = new File(check, problem + ".o");
-            if(o.exists()) o.delete();
-        }else if(lang.equals(Language.Cplus)) run = new File(check, "a.exe");
-        else run = new File(check, problem + ".exe");
-        if(in.exists()) in.delete();
-        if(out.exists()) out.delete();
-        if(src.exists()) src.delete();
-        if(run.exists()) run.delete();
+        File[] files = check.listFiles();
+        for(File f : files) f.delete();
+    }
+    
+    public void printError(InputStream stream, boolean compilationError) {
+        Scanner s = new Scanner(stream);
+        if(compilationError) System.err.println("Compilation Error cause:");
+        else System.err.println("Runtime cause:");
+        while(s.hasNextLine()) {
+            String line = s.nextLine();
+            String args[] = line.split(":");
+            StringBuilder sb = new StringBuilder();
+            for(int i = 1; i < args.length; i++) {
+                if(!sb.toString().equals("")) sb.append(":");
+                sb.append(args[i]);
+            }
+            System.err.println(sb.toString());
+        }
     }
 }

@@ -23,7 +23,7 @@ import ru.sscs.server.utils.CommandsListener;
  */
 public class Server_Loader implements Runnable {
     
-    public static final String version = "1.5A";
+    public static final String version = "1.6A";
     public static int port = 20222;
     public static Socket client = null;
     public static ServerSocket server = null;
@@ -31,7 +31,7 @@ public class Server_Loader implements Runnable {
     public static Scanner scan;
     public static String fileOutput = "temporary/";
     public static int busy = -1;
-    public static Language lang;
+    public static String lang;
     public static String problem;
     public static Config config, accounts, logs, data;
     public static CUHash users = new CUHash();
@@ -49,15 +49,10 @@ public class Server_Loader implements Runnable {
             config = new Config("main");
             port = Integer.parseInt(config.getString("port", "20222"));
             penalty = Integer.parseInt(config.getString("penalty", "5"));
-            config.getString("java_compiler", "\"C:/Program Files (x86)/Java/jdk1.7.0_25/bin/javac\"");
-            config.getString("java_launcher", "\"C:/Program Files (x86)/Java/jdk1.7.0_25/bin/java\"");
-            config.getString("c++_compiler", "\"C:/Program Files (x86)/CodeBlocks/MinGW/bin/mingw32-c++\"");
-            config.getString("c_compiler", "\"C:/Program Files (x86)/CodeBlocks/MinGW/bin/mingw32-g++\"");
-            config.getString("pascal_compiler", "\"C:/FPC/2.6.2/bin/i386-win32/fpc\"");
-            config.getString("delfi_compiler", "UNK");
-            config.getString("python_compiler", "UNK");
+            Language.loadConfigurations();
             accounts = new Config("accounts");
         }catch(Exception ex) {
+            ex.printStackTrace();
             warn("Can't load main configurations!", true);
         }
         log("Loaded port: " + port + "\n");
